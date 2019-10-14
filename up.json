@@ -4,11 +4,14 @@
   "regions": [
     "us-east-1"
   ],
+  "proxy": {
+    "command": "./auth-server"
+  },
   "hooks": {
     "build": [
       "cargo build --release --target x86_64-unknown-linux-musl",
       "cp target/x86_64-unknown-linux-musl/release/server ./auth-server"
-    ],
-    "clean": "rm auth-server"
-  }
+    ]
+  },
+  "clean": "rm auth-server"
 }
