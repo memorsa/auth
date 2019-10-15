@@ -10,7 +10,7 @@ fn index() -> impl Responder {
 fn main() {
     let port = env::var("PORT").unwrap_or_else(|_| String::from("8080"));
 
-    HttpServer::new(move || App::new().route("/", web::get().to(index)))
+    HttpServer::new(move || App::new().route("/authorize", web::get().to(index)))
         .bind(format!("127.0.0.1:{}", port))
         .unwrap()
         .run()

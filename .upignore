@@ -1,2 +1,4 @@
 *
 !auth-server
+!client/
+!client/public/**
