@@ -13,7 +13,7 @@
   },
   "hooks": {
     "build": [
-      "cargo build --release --target x86_64-unknown-linux-musl",
+      "cargo make build_release",
       "cp target/x86_64-unknown-linux-musl/release/server ./auth-server"
     ]
   },
