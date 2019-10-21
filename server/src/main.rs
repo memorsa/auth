@@ -2,7 +2,7 @@ extern crate actix_web;
 
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use askama::Template;
-use std::collections::HashMap;
+use serde::Deserialize;
 use std::env;
 
 #[derive(Template)]
@@ -10,12 +10,28 @@ use std::env;
 struct AuthorizeTemplate<'a> {
     name: &'a str,
     text: &'a str,
+    client_id: &'a str,
+    response_type: &'a str,
+    scope: Option<&'a str>,
 }
 
-fn authorize(query: web::Query<HashMap<String, String>>) -> impl Responder {
+#[derive(Deserialize)]
+struct AuthorizeInfo {
+    response_type: String,
+    client_id: String,
+    scope: Option<String>,
+}
+
+fn authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
     let s = AuthorizeTemplate {
         name: "Guys",
         text: "Welcome!",
+        client_id: &query.client_id[..],
+        response_type: &query.response_type[..],
+        scope: match &query.scope {
+            Some(value) => Some(&value[..]),
+            None => None,
+        },
     }
     .render()
     .unwrap();

@@ -11,6 +11,21 @@
   <p>
     {{ text }}
   </p>
+  <p>
+    client id: {{ client_id }}
+  </p>
+  <p>
+    response_type: {{ response_type }}
+  </p>
+  <p>
+    scope:
+    {% match scope %}
+    {% when Some with (val) %}
+    {{val}}
+    {% when None %}
+    Not Found
+    {% endmatch %}
+  </p>
 </body>
 
 </html>
