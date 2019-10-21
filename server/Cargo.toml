@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 actix-web = "1.0"
+askama = "0.8"
+tokio-postgres = "0.3.0"
