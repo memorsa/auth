@@ -1,31 +1,21 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Authorization</title>
+  </head>
 
-<head>
-  <meta charset="utf-8" />
-  <title>Actix web</title>
-</head>
-
-<body>
-  <h1>Hi, {{ name }}!</h1>
-  <p>
-    {{ text }}
-  </p>
-  <p>
-    client id: {{ client_id }}
-  </p>
-  <p>
-    response_type: {{ response_type }}
-  </p>
-  <p>
-    scope:
-    {% match scope %}
-    {% when Some with (val) %}
-    {{val}}
-    {% when None %}
-    Not Found
-    {% endmatch %}
-  </p>
-</body>
-
+  <body>
+    <h1>Hi, {{ name }}!</h1>
+    <p>
+      {{ text }}
+    </p>
+    <p>client id: {{ client_id }}</p>
+    <p>response_type: {{ response_type }}</p>
+    <p>
+      scope: {% match scope %} {% when Some with (val) %}
+      {{ val }}
+      {% when None %} Not Found {% endmatch %}
+    </p>
+  </body>
 </html>
