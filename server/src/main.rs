@@ -1,7 +1,7 @@
-extern crate actix_web;
-
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+
 use askama::Template;
+use ring::rand::{SecureRandom, SystemRandom};
 use serde::Deserialize;
 use std::env;
 
@@ -22,9 +22,9 @@ struct AuthorizeInfo {
     scope: Option<String>,
 }
 
-fn authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
+fn get_authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
     let s = AuthorizeTemplate {
-        name: "Guys",
+        name: "Everyone",
         text: "Welcome!",
         client_id: &query.client_id[..],
         response_type: &query.response_type[..],
@@ -39,6 +39,18 @@ fn authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
     HttpResponse::Ok().content_type("text/html").body(s)
 }
 
+fn post_authorize() -> impl Responder {
+    let mut code = vec![0; 8];
+    SystemRandom::new().fill(code.as_mut_slice()).unwrap();
+
+    hex::encode(&code)
+    //HttpResponse::Found()
+}
+
+fn token() -> impl Responder {
+    "abcde"
+}
+
 fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
@@ -49,7 +61,9 @@ fn main() {
     HttpServer::new(move || {
         App::new()
             .route("/", web::get().to(index))
-            .route("/authorize", web::get().to(authorize))
+            .route("/authorize", web::get().to(get_authorize))
+            .service(web::resource("/authorize").route(web::post().to(post_authorize)))
+            .route("/token", web::post().to(token))
     })
     .bind(format!("0.0.0.0:{}", port))
     .unwrap()

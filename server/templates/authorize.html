@@ -18,4 +18,27 @@
       {% when None %} Not Found {% endmatch %}
     </p>
   </body>
+  <form action="/authorize" accept-charset="UTF-8" method="post">
+    <input name="utf8" type="hidden" value="✓" /><input
+      type="hidden"
+      name="authenticity_token"
+      value="br9y/3IpDQjhIz0M+HXZDHC5EntAwcILR/W1Sy+OeLFfcnwHULht1UUARfiRr071EO0mAxcDrr0P8VGmspirIQ=="
+    />
+    <input
+      type="hidden"
+      name="client_id"
+      id="client_id"
+      value="{{ client_id }}"
+    />
+    <input
+      type="hidden"
+      name="state"
+      id="state"
+      value="97ee1ab91db791c6461dbe337fb90bc6"
+    />
+    <input type="hidden" name="scope" id="scope" value="user:email" />
+    <button type="submit" name="authorize" value="1">
+      Authorize ElephantSQL
+    </button>
+  </form>
 </html>
