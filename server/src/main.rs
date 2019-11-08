@@ -11,6 +11,12 @@ struct Client {
     redirect_uri: String,
 }
 
+#[derive(Deserialize)]
+struct AuthorizeForm {
+    client_id: String,
+    state: String,
+}
+
 #[derive(Template)]
 #[template(path = "authorize.html")]
 struct AuthorizeTemplate<'a> {
@@ -48,9 +54,7 @@ fn get_authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
     HttpResponse::Ok().content_type("text/html").body(s)
 }
 
-fn post_authorize() -> impl Responder {
-    // TODO: extract form data first
-
+fn post_authorize(form: web::Form<AuthorizeForm>) -> impl Responder {
     // check login status, redirect to login if not logged in
 
     // find the client
@@ -66,7 +70,7 @@ fn post_authorize() -> impl Responder {
     let mut code = vec![0; 8];
     SystemRandom::new().fill(code.as_mut_slice()).unwrap();
 
-    let location = format!("{}?code={}", client.redirect_uri, hex::encode(code));
+    let location = format!("{}?code={}&state={}", client.redirect_uri, hex::encode(code), form.state);
     HttpResponse::Found().header("location", location).finish()
 }
 
