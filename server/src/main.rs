@@ -5,6 +5,12 @@ use ring::rand::{SecureRandom, SystemRandom};
 use serde::Deserialize;
 use std::env;
 
+struct Client {
+    id: String,
+    name: String,
+    redirect_uri: String,
+}
+
 #[derive(Template)]
 #[template(path = "authorize.html")]
 struct AuthorizeTemplate<'a> {
@@ -23,6 +29,9 @@ struct AuthorizeInfo {
 }
 
 fn get_authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
+    // find the client
+    // if client found, render page
+    // else render 404
     let s = AuthorizeTemplate {
         name: "Everyone",
         text: "Welcome!",
@@ -40,11 +49,25 @@ fn get_authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
 }
 
 fn post_authorize() -> impl Responder {
+    // TODO: extract form data first
+
+    // check login status, redirect to login if not logged in
+
+    // find the client
+    let client = Client {
+        name: String::from("test"),
+        id: String::from("test"),
+        redirect_uri: String::from("https://google.com"),
+    };
+    // if found, generate code and make a redirect to redirect url
+    // else render 404
+
+    // TODO: associate code with client & current user
     let mut code = vec![0; 8];
     SystemRandom::new().fill(code.as_mut_slice()).unwrap();
 
-    hex::encode(&code)
-    //HttpResponse::Found()
+    let location = format!("{}?code={}", client.redirect_uri, hex::encode(code));
+    HttpResponse::Found().header("location", location).finish()
 }
 
 fn token() -> impl Responder {
