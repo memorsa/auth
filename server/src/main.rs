@@ -89,8 +89,6 @@ async fn index() -> impl Responder {
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
-    println!("{}", env::var("client_id").unwrap());
-
     let port = env::var("PORT").unwrap_or_else(|_| String::from("8080"));
 
     HttpServer::new(|| {
