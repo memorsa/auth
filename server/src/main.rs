@@ -34,7 +34,7 @@ struct AuthorizeInfo {
     scope: Option<String>,
 }
 
-fn get_authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
+async fn get_authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
     // find the client
     // if client found, render page
     // else render 404
@@ -54,7 +54,7 @@ fn get_authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
     HttpResponse::Ok().content_type("text/html").body(s)
 }
 
-fn post_authorize(form: web::Form<AuthorizeForm>) -> impl Responder {
+async fn post_authorize(form: web::Form<AuthorizeForm>) -> impl Responder {
     // check login status, redirect to login if not logged in
 
     // find the client
@@ -70,30 +70,37 @@ fn post_authorize(form: web::Form<AuthorizeForm>) -> impl Responder {
     let mut code = vec![0; 8];
     SystemRandom::new().fill(code.as_mut_slice()).unwrap();
 
-    let location = format!("{}?code={}&state={}", client.redirect_uri, hex::encode(code), form.state);
+    let location = format!(
+        "{}?code={}&state={}",
+        client.redirect_uri,
+        hex::encode(code),
+        form.state
+    );
     HttpResponse::Found().header("location", location).finish()
 }
 
-fn token() -> impl Responder {
+async fn token() -> impl Responder {
     "abcde"
 }
 
-fn index() -> impl Responder {
+async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-fn main() {
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
+    println!("{}", env::var("client_id").unwrap());
+
     let port = env::var("PORT").unwrap_or_else(|_| String::from("8080"));
 
-    HttpServer::new(move || {
+    HttpServer::new(|| {
         App::new()
             .route("/", web::get().to(index))
             .route("/authorize", web::get().to(get_authorize))
             .service(web::resource("/authorize").route(web::post().to(post_authorize)))
             .route("/token", web::post().to(token))
     })
-    .bind(format!("0.0.0.0:{}", port))
-    .unwrap()
+    .bind(format!("0.0.0.0:{}", port))?
     .run()
-    .unwrap();
+    .await
 }
