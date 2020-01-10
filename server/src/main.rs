@@ -89,6 +89,7 @@ async fn index() -> impl Responder {
 
 #[actix_rt::main]
 async fn main() -> std::io::Result<()> {
+    dotenv::dotenv().ok();
     let port = env::var("PORT").unwrap_or_else(|_| String::from("8080"));
 
     HttpServer::new(|| {
