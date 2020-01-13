@@ -1,9 +1,14 @@
+use actix::prelude::*;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 
 use askama::Template;
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::Deserialize;
 use std::env;
+
+mod db;
+
+use crate::db::{PgConnection, RandomWorld};
 
 struct Client {
     id: String,
@@ -97,6 +102,12 @@ async fn token() -> impl Responder {
     "abcde"
 }
 
+async fn db_actor_test(db: web::Data<Addr<PgConnection>>) -> impl Responder {
+    let res = db.send(RandomWorld).await;
+
+    format!("{}", res.unwrap())
+}
+
 async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
@@ -106,12 +117,16 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
     let port = env::var("PORT").unwrap_or_else(|_| String::from("8080"));
 
+    const DB_URL: &str = "postgres://ryzfreof:qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO@rajje.db.elephantsql.com:5432/ryzfreof";
+
     HttpServer::new(|| {
         App::new()
+            .data_factory(|| db::PgConnection::connect(DB_URL))
             .route("/", web::get().to(index))
             .route("/authorize", web::get().to(get_authorize))
             .service(web::resource("/authorize").route(web::post().to(post_authorize)))
             .route("/token", web::post().to(token))
+            .route("/db_test", web::get().to(db_actor_test))
     })
     .bind(format!("0.0.0.0:{}", port))?
     .run()
