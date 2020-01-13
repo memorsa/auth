@@ -35,26 +35,40 @@ struct AuthorizeInfo {
 }
 
 async fn get_authorize(query: web::Query<AuthorizeInfo>) -> impl Responder {
-    // find the client
+    // TODO: use middleware
+    // check login status, redirect to login if not logged in
+
+    // Get client id from query
+    let client_id = &query.client_id;
+    let client_name = env::var("client_name").unwrap_or_else(|_| String::from("Test"));
+
+    // find the client, mocking the finding process here
     // if client found, render page
     // else render 404
-    let s = AuthorizeTemplate {
-        name: "Everyone",
-        text: "Welcome!",
-        client_id: &query.client_id[..],
-        response_type: &query.response_type[..],
-        scope: match &query.scope {
-            Some(value) => Some(&value[..]),
-            None => None,
-        },
-    }
-    .render()
-    .unwrap();
+    if let Ok(id) = env::var("client_id") {
+        if &id == client_id {
+            let s = AuthorizeTemplate {
+                name: &client_name,
+                text: "Welcome!",
+                client_id: client_id,
+                response_type: &query.response_type[..],
+                scope: match &query.scope {
+                    Some(value) => Some(&value[..]),
+                    None => None,
+                },
+            }
+            .render()
+            .unwrap();
 
-    HttpResponse::Ok().content_type("text/html").body(s)
+            return HttpResponse::Ok().content_type("text/html").body(s);
+        }
+    }
+
+    HttpResponse::NotFound().body("404")
 }
 
 async fn post_authorize(form: web::Form<AuthorizeForm>) -> impl Responder {
+    // TODO: use middleware
     // check login status, redirect to login if not logged in
 
     // find the client
