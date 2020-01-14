@@ -1,13 +1,14 @@
 use std::io;
+use std::sync::Arc;
 
 use actix::prelude::*;
 use bytes::{BufMut, Bytes, BytesMut};
-use futures::{FutureExt, StreamExt, TryStreamExt};
+use futures::FutureExt;
 use tokio_postgres::{connect, Client, NoTls};
 
 /// Postgres interface
 pub struct PgConnection {
-    cl: Client,
+    cl: Arc<Client>,
 }
 
 pub struct RandomWorld;
@@ -20,9 +21,9 @@ impl Handler<RandomWorld> for PgConnection {
     type Result = ResponseFuture<Result<Bytes, io::Error>>;
 
     fn handle(&mut self, _: RandomWorld, _: &mut Self::Context) -> Self::Result {
-        let fut = self.cl.query("SELECT $1::TEXT", &[&"hello world"]);
-
+        let cl = self.cl.clone();
         Box::pin(async move {
+            let fut = cl.query("SELECT $1::TEXT", &[&"hello world Actor"]);
             let rows = fut
                 .await
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{:?}", e)))?;
@@ -30,7 +31,7 @@ impl Handler<RandomWorld> for PgConnection {
 
             let mut body = BytesMut::with_capacity(40);
 
-            body.put(value.as_bytes());
+            body.put(value.clone().as_bytes());
 
             Ok(body.freeze())
         })
@@ -48,6 +49,8 @@ impl PgConnection {
             .expect("can not connect to postgresql");
         actix_rt::spawn(conn.map(|_| ()));
 
-        Ok(PgConnection::create(move |_| PgConnection { cl }))
+        Ok(PgConnection::create(move |_| PgConnection {
+            cl: Arc::new(cl),
+        }))
     }
 }

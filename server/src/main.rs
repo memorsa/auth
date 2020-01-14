@@ -1,5 +1,7 @@
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
-
+use actix::prelude::*;
+use actix_web::dev::Body;
+use actix_web::http::{header::CONTENT_TYPE, header::SERVER, HeaderValue, StatusCode};
+use actix_web::{web, App, Error, HttpResponse, HttpServer, Responder};
 use askama::Template;
 use deadpool_postgres::{Manager, Pool};
 use ring::rand::{SecureRandom, SystemRandom};
@@ -7,7 +9,9 @@ use serde::Deserialize;
 use std::env;
 use tokio_postgres::Config;
 
-//mod db;
+mod db;
+
+use db::{PgConnection, RandomWorld};
 
 struct TheClient {
     id: String,
@@ -113,6 +117,21 @@ async fn db_test(db: web::Data<Pool>) -> impl Responder {
     format!("{}", value)
 }
 
+async fn db_actor_test(db: web::Data<Addr<PgConnection>>) -> Result<HttpResponse, Error> {
+    let res = db.send(RandomWorld).await.unwrap();
+    match res {
+        Ok(body) => {
+            let mut res = HttpResponse::with_body(StatusCode::OK, Body::Bytes(body));
+            res.headers_mut()
+                .insert(SERVER, HeaderValue::from_static("Actix"));
+            res.headers_mut()
+                .insert(CONTENT_TYPE, HeaderValue::from_static("text/html"));
+            Ok(res)
+        }
+        Err(_) => Ok(HttpResponse::InternalServerError().into()),
+    }
+}
+
 async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
@@ -122,7 +141,7 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
     let port = env::var("PORT").unwrap_or_else(|_| String::from("8080"));
 
-    //const DB_URL: &str = "postgres://ryzfreof:qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO@rajje.db.elephantsql.com:5432/ryzfreof";
+    const DB_URL: &str = "postgres://ryzfreof:qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO@rajje.db.elephantsql.com:5432/ryzfreof";
 
     let mut cfg = Config::new();
     cfg.host("rajje.db.elephantsql.com");
@@ -135,13 +154,14 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            //.data_factory(|| db::PgConnection::connect(DB_URL))
+            .data_factory(|| db::PgConnection::connect(DB_URL))
             .data(pool.clone())
             .route("/", web::get().to(index))
             .route("/authorize", web::get().to(get_authorize))
             .service(web::resource("/authorize").route(web::post().to(post_authorize)))
             .route("/token", web::post().to(token))
             .route("/db_test", web::get().to(db_test))
+            .route("/db_actor_test", web::get().to(db_actor_test))
     })
     .bind(format!("0.0.0.0:{}", port))?
     .run()
