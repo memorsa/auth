@@ -3,11 +3,9 @@ use actix_web::dev::Body;
 use actix_web::http::{header::CONTENT_TYPE, header::SERVER, HeaderValue, StatusCode};
 use actix_web::{web, App, Error, HttpResponse, HttpServer, Responder};
 use askama::Template;
-use deadpool_postgres::{Manager, Pool};
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::Deserialize;
 use std::env;
-use tokio_postgres::Config;
 
 mod db;
 
@@ -105,18 +103,6 @@ async fn token() -> impl Responder {
     "abcde"
 }
 
-async fn db_test(db: web::Data<Pool>) -> impl Responder {
-    //let res = db.send(RandomWorld).await;
-    let conn = db.get().await.unwrap();
-    let rows = conn
-        .query("SELECT $1::TEXT", &[&"hello world"])
-        .await
-        .unwrap();
-
-    let value: &str = rows[0].get(0);
-    format!("{}", value)
-}
-
 async fn db_actor_test(db: web::Data<Addr<PgConnection>>) -> Result<HttpResponse, Error> {
     let res = db.send(RandomWorld).await.unwrap();
     match res {
@@ -143,24 +129,13 @@ async fn main() -> std::io::Result<()> {
 
     const DB_URL: &str = "postgres://ryzfreof:qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO@rajje.db.elephantsql.com:5432/ryzfreof";
 
-    let mut cfg = Config::new();
-    cfg.host("rajje.db.elephantsql.com");
-    cfg.user("ryzfreof");
-    cfg.password("qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO");
-    cfg.dbname("ryzfreof");
-
-    let mgr = Manager::new(cfg, tokio_postgres::NoTls);
-    let pool = Pool::new(mgr, 15);
-
     HttpServer::new(move || {
         App::new()
             .data_factory(|| db::PgConnection::connect(DB_URL))
-            .data(pool.clone())
             .route("/", web::get().to(index))
             .route("/authorize", web::get().to(get_authorize))
             .service(web::resource("/authorize").route(web::post().to(post_authorize)))
             .route("/token", web::post().to(token))
-            .route("/db_test", web::get().to(db_test))
             .route("/db_actor_test", web::get().to(db_actor_test))
     })
     .bind(format!("0.0.0.0:{}", port))?
