@@ -1,16 +1,15 @@
-use actix::prelude::*;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 
 use askama::Template;
+use deadpool_postgres::{Manager, Pool};
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::Deserialize;
 use std::env;
+use tokio_postgres::Config;
 
-mod db;
+//mod db;
 
-use crate::db::{PgConnection, RandomWorld};
-
-struct Client {
+struct TheClient {
     id: String,
     name: String,
     redirect_uri: String,
@@ -77,7 +76,7 @@ async fn post_authorize(form: web::Form<AuthorizeForm>) -> impl Responder {
     // check login status, redirect to login if not logged in
 
     // find the client
-    let client = Client {
+    let client = TheClient {
         name: String::from("test"),
         id: String::from("test"),
         redirect_uri: String::from("https://google.com"),
@@ -102,10 +101,16 @@ async fn token() -> impl Responder {
     "abcde"
 }
 
-async fn db_actor_test(db: web::Data<Addr<PgConnection>>) -> impl Responder {
-    let res = db.send(RandomWorld).await;
+async fn db_test(db: web::Data<Pool>) -> impl Responder {
+    //let res = db.send(RandomWorld).await;
+    let conn = db.get().await.unwrap();
+    let rows = conn
+        .query("SELECT $1::TEXT", &[&"hello world"])
+        .await
+        .unwrap();
 
-    format!("{}", res.unwrap())
+    let value: &str = rows[0].get(0);
+    format!("{}", value)
 }
 
 async fn index() -> impl Responder {
@@ -117,16 +122,26 @@ async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
     let port = env::var("PORT").unwrap_or_else(|_| String::from("8080"));
 
-    const DB_URL: &str = "postgres://ryzfreof:qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO@rajje.db.elephantsql.com:5432/ryzfreof";
+    //const DB_URL: &str = "postgres://ryzfreof:qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO@rajje.db.elephantsql.com:5432/ryzfreof";
 
-    HttpServer::new(|| {
+    let mut cfg = Config::new();
+    cfg.host("rajje.db.elephantsql.com");
+    cfg.user("ryzfreof");
+    cfg.password("qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO");
+    cfg.dbname("ryzfreof");
+
+    let mgr = Manager::new(cfg, tokio_postgres::NoTls);
+    let pool = Pool::new(mgr, 15);
+
+    HttpServer::new(move || {
         App::new()
-            .data_factory(|| db::PgConnection::connect(DB_URL))
+            //.data_factory(|| db::PgConnection::connect(DB_URL))
+            .data(pool.clone())
             .route("/", web::get().to(index))
             .route("/authorize", web::get().to(get_authorize))
             .service(web::resource("/authorize").route(web::post().to(post_authorize)))
             .route("/token", web::post().to(token))
-            .route("/db_test", web::get().to(db_actor_test))
+            .route("/db_test", web::get().to(db_test))
     })
     .bind(format!("0.0.0.0:{}", port))?
     .run()

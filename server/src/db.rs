@@ -1,7 +1,8 @@
 use std::io;
 
 use actix::prelude::*;
-use futures::FutureExt;
+use bytes::{BufMut, Bytes, BytesMut};
+use futures::{FutureExt, StreamExt, TryStreamExt};
 use tokio_postgres::{connect, Client, NoTls};
 
 /// Postgres interface
@@ -12,14 +13,27 @@ pub struct PgConnection {
 pub struct RandomWorld;
 
 impl Message for RandomWorld {
-    type Result = String;
+    type Result = io::Result<Bytes>;
 }
 
 impl Handler<RandomWorld> for PgConnection {
-    type Result = String;
+    type Result = ResponseFuture<Result<Bytes, io::Error>>;
 
     fn handle(&mut self, _: RandomWorld, _: &mut Self::Context) -> Self::Result {
-        "Hello Tokio Postgres".to_string()
+        let fut = self.cl.query("SELECT $1::TEXT", &[&"hello world"]);
+
+        Box::pin(async move {
+            let rows = fut
+                .await
+                .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("{:?}", e)))?;
+            let value: &str = rows[0].get(0);
+
+            let mut body = BytesMut::with_capacity(40);
+
+            body.put(value.as_bytes());
+
+            Ok(body.freeze())
+        })
     }
 }
 

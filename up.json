@@ -1,9 +1,7 @@
 {
   "name": "memorsa-auth",
   "profile": "lambda",
-  "regions": [
-    "us-east-1"
-  ],
+  "regions": ["us-east-1"],
   "proxy": {
     "command": "./auth-server"
   },
@@ -17,5 +15,13 @@
       "cp target/x86_64-unknown-linux-musl/release/server ./auth-server"
     ]
   },
-  "clean": "rm auth-server"
+  "clean": "rm auth-server",
+  "stages": {
+    "production": {
+      "domain": "auth.memors.me"
+    },
+    "staging": {
+      "domain": "auth0.memors.me"
+    }
+  }
 }
