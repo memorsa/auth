@@ -1,10 +1,11 @@
 use std::env;
-use tokio_postgres::NoTls;
 use warp::Filter;
 
 mod db;
-
 use db::connect;
+
+mod access_token;
+mod authorize;
 
 #[tokio::main]
 async fn main() {
@@ -20,14 +21,14 @@ async fn main() {
     let client = connect(DB_URL).await.unwrap();
 
     let rows = client
-        .query("SELECT $1::TEXT", &[&"hello world!"])
+        .query("SELECT $1::TEXT", &[&"hello wrap!"])
         .await
         .unwrap();
 
     let value: String = rows[0].get(0);
 
-    // Match any request and return hello world!
-    let routes = warp::any().map(move || format!("{}", value));
+    // let routes = warp::any().map(move || format!("{}", value));
+    let routes = authorize::routes().or(access_token::routes());
 
     warp::serve(routes).run(([127, 0, 0, 1], port)).await;
 }
