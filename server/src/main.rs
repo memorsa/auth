@@ -16,18 +16,17 @@ async fn main() {
         .parse()
         .unwrap();
 
-    const DB_URL: &str = "postgres://ryzfreof:qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO@rajje.db.elephantsql.com:5432/ryzfreof";
+    // const DB_URL: &str = "postgres://ryzfreof:qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO@rajje.db.elephantsql.com:5432/ryzfreof";
 
-    let client = connect(DB_URL).await.unwrap();
+    // let client = connect(DB_URL).await.unwrap();
 
-    let rows = client
-        .query("SELECT $1::TEXT", &[&"hello wrap!"])
-        .await
-        .unwrap();
+    // let rows = client
+    //     .query("SELECT $1::TEXT", &[&"hello wrap!"])
+    //     .await
+    //     .unwrap();
 
-    let value: String = rows[0].get(0);
+    // let value: String = rows[0].get(0);
 
-    // let routes = warp::any().map(move || format!("{}", value));
     let routes = authorize::routes().or(access_token::routes());
 
     warp::serve(routes).run(([127, 0, 0, 1], port)).await;
