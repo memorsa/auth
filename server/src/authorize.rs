@@ -21,8 +21,7 @@ fn post() -> impl Filter<Extract = impl warp::Reply, Error = warp::Rejection> + 
 
 async fn get_authorize() -> Result<impl warp::Reply, warp::Rejection> {
     let mut hb = Handlebars::new();
-    hb.register_template_file("authorize", "./server/templates/authorize.html")
-        .unwrap();
+    hb.register_template_file("authorize", "./server/templates/authorize.html").unwrap();
     let render = hb
         .render(
             "authorize",

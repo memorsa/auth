@@ -27,7 +27,9 @@ async fn main() {
 
     // let value: String = rows[0].get(0);
 
+    // let static_files = warp::path("static").and(warp::fs::dir("./client/public"));
+    // let routes = static_files.or(authorize::routes()).or(access_token::routes());
     let routes = authorize::routes().or(access_token::routes());
 
-    warp::serve(routes).run(([127, 0, 0, 1], port)).await;
+    warp::serve(routes).run(([0, 0, 0, 0], port)).await;
 }
