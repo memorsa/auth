@@ -2,3 +2,4 @@
 !auth-server
 !client/
 !client/public/**
+!server/templates/**
