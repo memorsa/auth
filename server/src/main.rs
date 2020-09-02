@@ -29,7 +29,13 @@ async fn main() {
 
     // let static_files = warp::path("static").and(warp::fs::dir("./client/public"));
     // let routes = static_files.or(authorize::routes()).or(access_token::routes());
-    let routes = authorize::routes().or(access_token::routes());
+
+    let register = warp::path("register").map(|| "Hello from register");
+    let login = warp::path("login").map(|| "Hello from login");
+    let logout = warp::path("logout").map(|| "Hello from logout");
+    let routes = register.or(login).or(logout);
+    let routes = warp::path("api").and(routes);
+    // let routes = authorize::routes().or(access_token::routes());
 
     warp::serve(routes).run(([0, 0, 0, 0], port)).await;
 }
