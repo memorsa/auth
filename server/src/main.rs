@@ -1,4 +1,6 @@
 use std::env;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use warp::Filter;
 
 mod db;
@@ -33,9 +35,24 @@ async fn main() {
     let register = warp::path("register").map(|| "Hello from register");
     let login = warp::path("login").map(|| "Hello from login");
     let logout = warp::path("logout").map(|| "Hello from logout");
-    let routes = register.or(login).or(logout);
-    let routes = warp::path("api").and(routes);
-    let routes = authorize::routes().or(access_token::routes()).or(routes);
+    let api = warp::path("api").and(register.or(login).or(logout));
+
+    let counter_db = Arc::new(Mutex::new(0));
+    let counter_db = warp::any().map(move || Arc::clone(&counter_db));
+    let counter = warp::path("counter")
+        .and(counter_db.clone())
+        .and_then(counter);
+
+    let routes = authorize::routes()
+        .or(access_token::routes())
+        .or(api)
+        .or(counter);
 
     warp::serve(routes).run(([0, 0, 0, 0], port)).await;
+}
+
+async fn counter(db: Arc<Mutex<u8>>) -> Result<impl warp::Reply, warp::Rejection> {
+    let mut counter = db.lock().await;
+    *counter += 1;
+    Ok(counter.to_string())
 }
