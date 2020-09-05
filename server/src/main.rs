@@ -13,6 +13,7 @@ use warp::Filter;
 
 mod access_token;
 mod authorize;
+mod signup;
 
 #[derive(Deserialize)]
 struct User {
@@ -78,6 +79,7 @@ async fn main() -> Result<(), Error> {
         .and_then(counter);
 
     let routes = authorize::routes()
+        .or(signup::routes())
         .or(access_token::routes())
         .or(api)
         .or(counter);
