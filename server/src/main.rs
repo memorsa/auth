@@ -1,4 +1,6 @@
 use serde::Deserialize;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::Error;
 use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
@@ -19,7 +21,7 @@ struct User {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Error> {
     dotenv::dotenv().ok();
 
     let port: u16 = env::var("PORT")
@@ -27,7 +29,18 @@ async fn main() {
         .parse()
         .unwrap();
 
-    // const DB_URL: &str = "postgres://ryzfreof:qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO@rajje.db.elephantsql.com:5432/ryzfreof";
+    const DB_URL: &str = "postgres://ryzfreof:qiwHjU94MS5jOkkDVoChIg-m5-3_8NZO@rajje.db.elephantsql.com:5432/ryzfreof";
+    let pool = PgPoolOptions::new()
+        .max_connections(1)
+        .connect(DB_URL)
+        .await?;
+
+    let row: (i64,) = sqlx::query_as("SELECT $1")
+        .bind(150_i64)
+        .fetch_one(&pool)
+        .await?;
+
+    assert_eq!(row.0, 150);
 
     // let client = connect(DB_URL).await.unwrap();
 
@@ -70,6 +83,7 @@ async fn main() {
         .or(counter);
 
     warp::serve(routes).run(([0, 0, 0, 0], port)).await;
+    Ok(())
 }
 
 async fn counter(db: Arc<Mutex<u8>>) -> Result<impl warp::Reply, warp::Rejection> {
