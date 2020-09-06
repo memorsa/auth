@@ -1,6 +1,5 @@
 use serde::Deserialize;
 use sqlx::postgres::PgPoolOptions;
-use sqlx::Error;
 use std::collections::HashMap;
 use std::env;
 use std::sync::Arc;
@@ -22,7 +21,7 @@ struct User {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Error> {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv::dotenv().ok();
 
     let port: u16 = env::var("PORT")
