@@ -78,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and_then(counter);
 
     let routes = authorize::routes()
-        .or(signup::routes())
+        .or(signup::routes(pool.clone()))
         .or(access_token::routes())
         .or(api)
         .or(counter);
