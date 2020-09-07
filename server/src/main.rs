@@ -12,6 +12,7 @@ use warp::Filter;
 
 mod access_token;
 mod authorize;
+mod signin;
 mod signup;
 
 #[derive(Deserialize)]
@@ -79,6 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let routes = authorize::routes()
         .or(signup::routes(pool.clone()))
+        .or(signin::routes(pool.clone()))
         .or(access_token::routes())
         .or(api)
         .or(counter);
