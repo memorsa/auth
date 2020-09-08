@@ -1,25 +1,11 @@
-use serde::Deserialize;
 use sqlx::postgres::PgPoolOptions;
-use std::collections::HashMap;
 use std::env;
-use std::sync::Arc;
-use tokio::sync::Mutex;
-use warp::http::StatusCode;
 use warp::Filter;
-
-//mod db;
-//use db::connect;
 
 mod access_token;
 mod authorize;
 mod signin;
 mod signup;
-
-#[derive(Deserialize)]
-struct User {
-    username: String,
-    password: String,
-}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
