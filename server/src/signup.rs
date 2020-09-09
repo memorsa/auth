@@ -9,12 +9,8 @@ struct User {
 }
 
 async fn signup(pool: PgPool, new_user: User) -> Result<impl Reply, Rejection> {
-    let rec = sqlx::query!(
-        r#"
-INSERT INTO users (name, password_digest)
-VALUES ( $1, $2 )
-RETURNING id
-        "#,
+    let rec = sqlx::query_file!(
+        "queries/create-user.sql",
         new_user.username,
         new_user.password
     )
