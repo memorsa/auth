@@ -1,3 +1,4 @@
+use askama::Template;
 use serde::Deserialize;
 use sqlx::postgres::PgPool;
 use warp::{filters::BoxedFilter, Filter, Rejection, Reply};
@@ -6,6 +7,12 @@ use warp::{filters::BoxedFilter, Filter, Rejection, Reply};
 struct User {
     username: String,
     password: String,
+}
+
+#[derive(Template)]
+#[template(path = "signup.html")]
+struct SignupTemplate<'a> {
+    name: &'a str,
 }
 
 async fn signup(pool: PgPool, new_user: User) -> Result<impl Reply, Rejection> {
@@ -21,10 +28,12 @@ async fn signup(pool: PgPool, new_user: User) -> Result<impl Reply, Rejection> {
 }
 
 pub fn routes(pool: PgPool) -> BoxedFilter<(impl Reply,)> {
-    warp::post()
+    let get = warp::get().map(|| SignupTemplate { name: "Askama" });
+    let post = warp::post()
         .and(warp::path("signup"))
         .and(warp::any().map(move || pool.clone()))
         .and(warp::body::json())
-        .and_then(signup)
-        .boxed()
+        .and_then(signup);
+
+    get.or(post).boxed()
 }
