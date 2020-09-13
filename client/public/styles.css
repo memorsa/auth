@@ -1,3 +1,13 @@
 body {
   background-color: lightblue;
 }
+
+input {
+  display: block;
+  margin: 10px;
+}
+
+.signup {
+  margin: 0 auto;
+  width: 350px;
+}
