@@ -31,7 +31,7 @@ pub fn routes(pool: PgPool) -> BoxedFilter<(impl Reply,)> {
     let post = path
         .and(warp::post())
         .and(warp::any().map(move || pool.clone()))
-        .and(warp::body::json())
+        .and(warp::body::form())
         .and_then(signup);
 
     get.or(post).boxed()
