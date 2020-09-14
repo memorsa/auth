@@ -11,9 +11,7 @@ struct User {
 
 #[derive(Template)]
 #[template(path = "signup.html")]
-struct SignupTemplate<'a> {
-    name: &'a str,
-}
+struct SignupTemplate;
 
 async fn signup(pool: PgPool, new_user: User) -> Result<impl Reply, Rejection> {
     let rec = sqlx::query_file!(
@@ -29,9 +27,7 @@ async fn signup(pool: PgPool, new_user: User) -> Result<impl Reply, Rejection> {
 
 pub fn routes(pool: PgPool) -> BoxedFilter<(impl Reply,)> {
     let path = warp::path("signup");
-    let get = path
-        .and(warp::get())
-        .map(|| SignupTemplate { name: "Askama" });
+    let get = path.and(warp::get()).map(|| SignupTemplate);
     let post = path
         .and(warp::post())
         .and(warp::any().map(move || pool.clone()))
