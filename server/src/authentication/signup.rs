@@ -1,7 +1,8 @@
+use super::password_helper::hash;
 use askama::Template;
 use serde::Deserialize;
 use sqlx::postgres::PgPool;
-use warp::{filters::BoxedFilter, Filter, Rejection, Reply};
+use warp::{filters::BoxedFilter, http::Uri, Filter, Rejection, Reply};
 
 #[derive(Deserialize)]
 struct User {
@@ -17,12 +18,13 @@ async fn signup(pool: PgPool, new_user: User) -> Result<impl Reply, Rejection> {
     let rec = sqlx::query_file!(
         "queries/create-user.sql",
         new_user.username,
-        new_user.password
+        new_user.username
     )
     .fetch_one(&pool)
     .await
     .unwrap();
-    Ok(rec.id.to_string())
+
+    Ok(warp::redirect(Uri::from_static("/")))
 }
 
 pub fn routes(pool: PgPool) -> BoxedFilter<(impl Reply,)> {

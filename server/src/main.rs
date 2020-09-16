@@ -3,9 +3,8 @@ use std::env;
 use warp::Filter;
 
 mod access_token;
+mod authentication;
 mod authorize;
-mod signin;
-mod signup;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,8 +24,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let static_files = warp::path("static").and(warp::fs::dir("./client/public"));
 
     let routes = static_files
-        .or(signup::routes(pool.clone()))
-        .or(signin::routes(pool.clone()))
+        .or(authentication::signup::routes(pool.clone()))
+        .or(authentication::signin::routes(pool.clone()))
         .or(authorize::routes())
         .or(access_token::routes());
 
