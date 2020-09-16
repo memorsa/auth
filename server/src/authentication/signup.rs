@@ -18,7 +18,7 @@ async fn signup(pool: PgPool, new_user: User) -> Result<impl Reply, Rejection> {
     let rec = sqlx::query_file!(
         "queries/create-user.sql",
         new_user.username,
-        new_user.username
+        hash(new_user.password.as_bytes())
     )
     .fetch_one(&pool)
     .await
