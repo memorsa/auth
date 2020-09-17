@@ -1,8 +1,13 @@
 use super::password_helper::hash;
 use askama::Template;
+use cookie::Cookie;
 use serde::Deserialize;
 use sqlx::postgres::PgPool;
-use warp::{filters::BoxedFilter, http::Uri, Filter, Rejection, Reply};
+use warp::{
+    filters::BoxedFilter,
+    http::{header, Uri},
+    Filter, Rejection, Reply,
+};
 
 #[derive(Deserialize)]
 struct User {
@@ -24,7 +29,18 @@ async fn signup(pool: PgPool, new_user: User) -> Result<impl Reply, Rejection> {
     .await
     .unwrap();
 
-    Ok(warp::redirect(Uri::from_static("/")))
+    let new_cookie = Cookie::build("name", "value")
+        .path("/")
+        .secure(true)
+        .http_only(true)
+        .finish();
+
+    let redirect = warp::redirect(Uri::from_static("/"));
+    Ok(warp::reply::with_header(
+        redirect,
+        header::SET_COOKIE,
+        new_cookie.to_string(),
+    ))
 }
 
 pub fn routes(pool: PgPool) -> BoxedFilter<(impl Reply,)> {
