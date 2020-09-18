@@ -10,7 +10,7 @@ version = "0.1.0"
 anyhow = "1"
 askama = "0.10"
 askama_warp = "0.10"
-cookie = "0.14"
+cookie = {version = "0.14", features = ["secure"]}
 dotenv = "0.15.0"
 handlebars = "3.0.1"
 rand = "0.7"
