@@ -1,6 +1,6 @@
 use super::password_helper::hash;
 use askama::Template;
-use cookie::{Cookie, Key};
+use cookie::{Cookie, CookieJar, Key};
 use rand::prelude::*;
 use rand_pcg::Pcg64;
 use rand_seeder::{Seeder, SipHasher};
@@ -38,17 +38,22 @@ async fn signup(pool: PgPool, new_user: User) -> Result<impl Reply, Rejection> {
     let mut master_key = [0u8; 32];
     rng.fill_bytes(&mut master_key);
     let key = Key::derive_from(&master_key);
+
+    let mut jar = CookieJar::new();
     let new_cookie = Cookie::build("user_id", rec.id.to_string())
         .path("/")
         .secure(true)
         .http_only(true)
         .finish();
 
+    jar.private(&key).add(new_cookie);
+
+    let cookie_header: Vec<String> = jar.iter().map(|cookie| cookie.to_string()).collect();
     let redirect = warp::redirect(Uri::from_static("/"));
     Ok(warp::reply::with_header(
         redirect,
         header::SET_COOKIE,
-        new_cookie.to_string(),
+        cookie_header.join("; "),
     ))
 }
 
