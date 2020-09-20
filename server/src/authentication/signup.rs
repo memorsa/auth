@@ -1,8 +1,12 @@
 use super::password_helper::hash;
 use askama::Template;
-use cookie::Cookie;
+use cookie::{Cookie, Key};
+use rand::prelude::*;
+use rand_pcg::Pcg64;
+use rand_seeder::{Seeder, SipHasher};
 use serde::Deserialize;
 use sqlx::postgres::PgPool;
+use std::env;
 use warp::{
     filters::BoxedFilter,
     http::{header, Uri},
@@ -29,7 +33,12 @@ async fn signup(pool: PgPool, new_user: User) -> Result<impl Reply, Rejection> {
     .await
     .unwrap();
 
-    let new_cookie = Cookie::build("name", "value")
+    let secret_key_base = env::var("SECRET_KEY_BASE").unwrap();
+    let mut rng: Pcg64 = Seeder::from(secret_key_base).make_rng();
+    let mut master_key = [0u8; 32];
+    rng.fill_bytes(&mut master_key);
+    let key = Key::derive_from(&master_key);
+    let new_cookie = Cookie::build("user_id", rec.id.to_string())
         .path("/")
         .secure(true)
         .http_only(true)
