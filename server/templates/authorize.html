@@ -6,16 +6,14 @@
   </head>
 
   <body>
-    <h1>Hi, {{ name }}!</h1>
+    <h1>Hi, {{name}}!</h1>
     <p>
-      {{ text }}
+      {{text}}
     </p>
-    <p>client id: {{ client_id }}</p>
-    <p>response_type: {{ response_type }}</p>
+    <p>client id: {{client_id}}</p>
+    <p>response_type: {{response_type}}</p>
     <p>
-      scope: {% match scope %} {% when Some with (val) %}
-      {{ val }}
-      {% when None %} Not Found {% endmatch %}
+      scope: {{#with scope as |scope|}} {{scope}} {{else}} Not Found {{/with}}
     </p>
   </body>
   <form action="/authorize" accept-charset="UTF-8" method="post">

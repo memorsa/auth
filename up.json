@@ -23,5 +23,10 @@
     "staging": {
       "domain": "auth0.memors.me"
     }
+  },
+  "lambda": {
+    "warm": true,
+    "warm_count": 3,
+    "warm_rate": "30m"
   }
 }

@@ -1,0 +1,18 @@
+body {
+  background-color: lightblue;
+}
+
+input {
+  display: block;
+  margin: 10px 0;
+}
+
+.signup {
+  margin: 0 auto;
+  width: 350px;
+}
+
+.signup button,
+input {
+  width: 100%;
+}
